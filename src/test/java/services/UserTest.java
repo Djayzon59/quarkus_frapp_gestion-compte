@@ -3,8 +3,7 @@ package services;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import outils.SecurityTools;
 
 import java.text.SimpleDateFormat;
@@ -15,8 +14,10 @@ import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class UserTest {
-    static String cryptedParameters;
+    private static String cryptedParameters;
+    private static String token;
 
 
     @BeforeAll
@@ -31,6 +32,7 @@ class UserTest {
         cryptedParameters = SecurityTools.encrypt(plainTextParameters);
     }
 
+    @Order(1)
     @Test
     void createUserAlreadyExist() {
         given()
@@ -43,6 +45,7 @@ class UserTest {
                 .statusCode(417);
     }
 
+    @Order(2)
     @Test
     void createUserInvalidMail() {
         given()
@@ -55,6 +58,7 @@ class UserTest {
                 .statusCode(400);
     }
 
+    @Order(3)
     @Test
     void createUserAccount() {
         given()
@@ -66,10 +70,9 @@ class UserTest {
                 .then()
                 .statusCode(200);
     }
-
+    @Order(4)
     @Test
     void confirmCreateEmploye() {
-
         given()
                 .contentType(ContentType.JSON)
                 .queryParam("code", cryptedParameters)
@@ -78,11 +81,28 @@ class UserTest {
                 .then()
                 .statusCode(200);
     }
+    @Order(5)
+    @Test
+    void authenticate(){
+        token =  given()
+                .contentType(ContentType.JSON)
+                .header("login", "jason-dem@laposte.net")
+                .header("password", "Jason59-@Pirate62")
+                .when()
+                .post("user/authentification")
+                .then()
+                .statusCode(200)
+                .extract()
+                .header("Authorization");
+    }
 
+
+    @Order(6)
     @Test
     void deleteUserById() {
         given()
                 .contentType(ContentType.JSON)
+                .header("Authorization", token)
                 .pathParam("login","jason-dem@laposte.net")
                 .when()
                 .delete("user/{login}")

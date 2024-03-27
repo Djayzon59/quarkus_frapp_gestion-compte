@@ -15,8 +15,10 @@ import java.util.List;
 @Entity
 @Table(name ="Utilisateur")
 public class UtilisateurEntity {
-
     @Id
+    @Column(name = "id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
     @Column(name = "mail_utilisateur", nullable = false)
     private String mail_utilisateur;
     @Column(name = "password", nullable = false)

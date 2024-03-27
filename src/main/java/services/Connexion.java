@@ -69,7 +69,7 @@ public class Connexion {
     public Response addConnexion(@PathParam("login") String login) {
 
         try {
-            UtilisateurEntity userEntity = userRepo.findById(login);
+            UtilisateurEntity userEntity = userRepo.findClientByMail(login);
             if (userEntity == null)
                 return Response.status(417).entity("L'utilisateur n'existe pas !").build();
 

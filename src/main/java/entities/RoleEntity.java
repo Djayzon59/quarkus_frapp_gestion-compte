@@ -28,4 +28,8 @@ public class RoleEntity {
     private List<UtilisateurEntity> userEntities;
 
 
+    public RoleEntity(int id, String libelle){
+        this.libelleRole = libelle;
+        this.id = id;
+    }
 }

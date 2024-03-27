@@ -3,10 +3,7 @@ package services;
 import dto.ClientDto;
 import dto.MailDto;
 import dto.PaysDto;
-import entities.ClientEntity;
-import entities.PaysEntity;
-import entities.UtilisateurEntity;
-import entities.VilleEntity;
+import entities.*;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import io.smallrye.jwt.build.Jwt;
 import jakarta.annotation.security.RolesAllowed;
@@ -70,11 +67,11 @@ public class Client {
     @APIResponse(responseCode = "251", description = "Quota Clef API dépassé !")
     @APIResponse(responseCode = "400", description = "Format mail invalide !")
     @APIResponse(responseCode = "401", description = "Format password invalide !")
-    @APIResponse(responseCode = "417", description = "Le login existe déjà !")
+    @APIResponse(responseCode = "417", description = "Vous avez déjà un compte pro !")
     @Operation(summary = "Créer compte pro", description = "Créer compte pro")
     public Response creerComptePro(@HeaderParam("login") String login, @HeaderParam("password") String password) {
 
-        if (utilisateurRepo.findById(login) != null)
+        if (utilisateurRepo.findClientByMail(login) != null)
             return Response.status(417).build();
         if (!Validator.isMailValid(login))
             return Response.status(400, "Adresse mail non valide !").build();
@@ -121,7 +118,8 @@ public class Client {
 
         UtilisateurEntity user = new UtilisateurEntity();
         user.setMail_utilisateur(params[0]);
-        if (utilisateurRepo.findById(user.getMail_utilisateur()) != null)
+        RoleEntity roleEntity = roleRepo.findById(2004);
+        if (utilisateurRepo.findClientByMail(user.getMail_utilisateur()) != null)
             return Response.ok("Le lien a déjà été utilisé !").status(401, "Le lien a déjà été utilisé !").build();
         user.setPassword(params[1]);
         user.setRoleEntity(roleRepo.findById(2004));
@@ -138,7 +136,7 @@ public class Client {
     @APIResponse(responseCode = "404", description = "L'utilisateur n'existe pas")
     public Response authenticate(@HeaderParam("login") String login, @HeaderParam("password") String password) {
 
-        UtilisateurEntity utilisateur = utilisateurRepo.findById(login);
+        UtilisateurEntity utilisateur = utilisateurRepo.findClientByMail(login);
         if (utilisateur == null)
             return Response.ok().status(404).build();
 
@@ -173,7 +171,7 @@ public class Client {
         if (!jsonWebToken.containsClaim("isValidate")) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
-        UtilisateurEntity utilisateur = utilisateurRepo.findById(login);
+        UtilisateurEntity utilisateur = utilisateurRepo.findClientByMail(login);
         if (utilisateur == null)
             return Response.status(Response.Status.UNAUTHORIZED).build();
         if (!BcryptUtil.matches(password, utilisateur.getPassword()))
@@ -195,6 +193,25 @@ public class Client {
         clientRepo.persist(clientEntity);
         String token = SecurityTools.getToken(utilisateur);
         return Response.ok().header("Authorization", "Bearer " + token).build();
+    }
+
+    @RolesAllowed({"super-admin", "client"})
+    @Transactional
+    @DELETE
+    @Path("/{login}/")
+    @Operation(summary = "Delete connexions by user")
+    @APIResponse(responseCode = "200", description = "OK !")
+    @APIResponse(responseCode = "403", description = "Accès interdit !")
+    @APIResponse(responseCode = "500", description = "Echec supression !")
+    public Response deleteById(@PathParam("login") String login) {
+        if(jsonWebToken.getGroups().contains("client") && !jsonWebToken.getClaim("upn").equals(login))
+            return Response.status(Response.Status.FORBIDDEN).build();
+        try {
+            utilisateurRepo.deleteClientByMail(login);
+            return Response.ok().build();
+        } catch (Exception e) {
+            return Response.serverError().build();
+        }
     }
 
 }

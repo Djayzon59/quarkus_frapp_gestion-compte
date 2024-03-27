@@ -21,6 +21,7 @@ import restClient.MailClient;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -52,7 +53,7 @@ public class SuperAdmin {
     @Operation(summary = "Créer compte super-admin", description = "Créer compte super-admin")
     public Response creerCompteSuperAdmin(@HeaderParam("login") String login, @HeaderParam("password") String password) {
 
-        if (utilisateurRepo.findById(login) != null)
+        if (utilisateurRepo.findSaByMail(login) != null)
             return Response.status(417).build();
         if (!Validator.isMailValid(login))
             return Response.status(400, "Adresse mail non valide !").build();
@@ -98,7 +99,7 @@ public class SuperAdmin {
 
         UtilisateurEntity user = new UtilisateurEntity();
         user.setMail_utilisateur(params[0]);
-        if (utilisateurRepo.findById(user.getMail_utilisateur()) != null)
+        if (utilisateurRepo.findSaByMail(user.getMail_utilisateur()) != null)
             return Response.ok("Le lien a déjà été utilisé !").status(401, "Le lien a déjà été utilisé !").build();
         user.setPassword(params[1]);
         user.setRoleEntity(roleRepo.findById(2005));
@@ -117,7 +118,7 @@ public class SuperAdmin {
     @APIResponse(responseCode = "404", description = "L'utilisateur n'existe pas")
     public Response authenticate(@HeaderParam("login") String login, @HeaderParam("password") String password) {
 
-        UtilisateurEntity utilisateur = utilisateurRepo.findById(login);
+        UtilisateurEntity utilisateur = utilisateurRepo.findSaByMail(login);
         if (utilisateur == null)
             return Response.ok().status(404).build();
 
@@ -134,4 +135,22 @@ public class SuperAdmin {
             return Response.status(401).build();
         }
     }
+
+    @RolesAllowed("super-admin")
+    @Transactional
+    @DELETE
+    @Path("/{login}/")
+    @Operation(summary = "Delete connexions by user")
+    @APIResponse(responseCode = "200", description = "OK !")
+    @APIResponse(responseCode = "500", description = "Echec supression !")
+    public Response deleteSuperAById(@PathParam("login") String login) {
+
+        try {
+            utilisateurRepo.deleteSaByMail(login);
+            return Response.ok().build();
+        } catch (Exception e) {
+            return Response.serverError().build();
+        }
+    }
+
 }

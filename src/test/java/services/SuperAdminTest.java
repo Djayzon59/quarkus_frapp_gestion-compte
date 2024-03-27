@@ -1,12 +1,15 @@
 package services;
 
+import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import jakarta.ws.rs.core.Response;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
+import outils.SecurityTools;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,6 +19,19 @@ import static org.junit.jupiter.api.Assertions.*;
 class SuperAdminTest {
 
     private static String token;
+    static String cryptedParameters;
+
+    @BeforeAll
+    public static void setup() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MINUTE, 10);
+        Date expiration = calendar.getTime();
+        String plainTextParameters = String.format("%s|%s|%s",
+                "jason-dem@laposte.net",
+                BcryptUtil.bcryptHash("Jason59-@Pirate62", 31, "MyPersonnalSalt0".getBytes()),
+                new SimpleDateFormat("dd-MM-yy-HH:mm:ss").format(expiration));
+        cryptedParameters = SecurityTools.encrypt(plainTextParameters);
+    }
 
     @Test
     @Order(1)
@@ -30,13 +46,11 @@ class SuperAdminTest {
                 .statusCode(200)
                 .extract()
                 .header("Authorization");
-        System.out.println(token);
     }
 
     @Test
     @Order(2)
-    void creerCompteSuperAdmin() {
-        System.out.println(token);
+    void creerCompte() {
         given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", token)
@@ -50,11 +64,10 @@ class SuperAdminTest {
     @Test
     @Order(3)
     void creerCompteLoginExist() {
-        System.out.println(token);
         given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", token)
-                .header("login", "jasonbailleul59@laposte.net")
+                .header("login", "jason-dem@laposte.net")
                 .header("password", "Pirate62")
                 .when()
                 .post("super-admin/")
@@ -64,7 +77,6 @@ class SuperAdminTest {
     @Test
     @Order(4)
     void creerCompteInvalidMail() {
-        System.out.println(token);
         given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", token)
@@ -77,7 +89,26 @@ class SuperAdminTest {
     }
 
     @Test
-    void confirmCreateSuperAdmin() {
+    void confirmCreate() {
+        given()
+                .contentType(ContentType.JSON)
+                .queryParam("code", cryptedParameters)
+                .when()
+                .get("super-admin/confirm")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    void delete() {
+        given()
+                .contentType(ContentType.JSON)
+                .header("Authorization", token)
+                .pathParam("login","jason-dem@laposte.net")
+                .when()
+                .delete("super-admin/{login}")
+                .then()
+                .statusCode(200);
     }
 
 
