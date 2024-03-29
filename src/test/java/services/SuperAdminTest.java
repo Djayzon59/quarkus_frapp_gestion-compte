@@ -67,7 +67,7 @@ class SuperAdminTest {
         given()
                 .contentType(ContentType.JSON)
                 .header("Authorization", token)
-                .header("login", "jason-dem@laposte.net")
+                .header("login", "djadja59670@gmail.com")
                 .header("password", "Pirate62")
                 .when()
                 .post("super-admin/")
@@ -88,6 +88,7 @@ class SuperAdminTest {
                 .statusCode(400);
     }
 
+    @Order(5)
     @Test
     void confirmCreate() {
         given()
@@ -99,6 +100,7 @@ class SuperAdminTest {
                 .statusCode(200);
     }
 
+    @Order(6)
     @Test
     void delete() {
         given()

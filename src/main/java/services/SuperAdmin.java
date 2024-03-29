@@ -39,6 +39,8 @@ public class SuperAdmin {
     private UtilisateurRepo utilisateurRepo;
     @Inject
     private Connexion connexion;
+    @Inject
+    private ConnexionRepo connexionRepo;
 
     @RolesAllowed("super-admin")
     @Transactional
@@ -83,6 +85,7 @@ public class SuperAdmin {
 
     @Transactional
     @GET
+    @Operation( hidden = true)
     @APIResponse(responseCode = "400", description = "Lien expiré ou invalide !")
     @APIResponse(responseCode = "401", description = "Lien déjà utilisé !")
     @Path("/confirm")
@@ -144,7 +147,7 @@ public class SuperAdmin {
     @APIResponse(responseCode = "200", description = "OK !")
     @APIResponse(responseCode = "500", description = "Echec supression !")
     public Response deleteSuperAById(@PathParam("login") String login) {
-
+        connexionRepo.deleteConnexionsBySuperAdmin(login);
         try {
             utilisateurRepo.deleteSaByMail(login);
             return Response.ok().build();

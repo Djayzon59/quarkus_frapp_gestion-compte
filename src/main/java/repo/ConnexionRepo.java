@@ -1,6 +1,7 @@
 package repo;
 
 import entities.ConnexionEntity;
+import entities.RoleEntity;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.ws.rs.PathParam;
@@ -9,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RequestScoped
-public class ConnexionRepo implements PanacheRepositoryBase<ConnexionEntity,Integer> {
+public class ConnexionRepo implements PanacheRepositoryBase<ConnexionEntity, Integer> {
 
     public long getConnexionFailedCount(String id_user) {
         LocalDateTime twentyFourHoursAgo = LocalDateTime.now().minusHours(24);
@@ -35,6 +36,17 @@ public class ConnexionRepo implements PanacheRepositoryBase<ConnexionEntity,Inte
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public boolean deleteConnexionsBySuperAdmin(@PathParam("login") String login) {
+        RoleEntity roleEntity = new RoleEntity(2005, "super-admin");
+        List<ConnexionEntity> connexions = find("userEntity.mail_utilisateur = ?1 AND userEntity.roleEntity = ?2", login, roleEntity).list();
+        if (connexions.isEmpty())
+            return false;
+        for (ConnexionEntity connexion : connexions)
+            delete(connexion);
+
+        return true;
 
     }
 }

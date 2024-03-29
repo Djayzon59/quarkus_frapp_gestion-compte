@@ -6,4 +6,13 @@ import jakarta.enterprise.context.RequestScoped;
 
 @RequestScoped
 public class ClientRepo implements PanacheRepositoryBase<ClientEntity, Integer> {
+
+    public void deleteClientByUserId(int id) {
+        ClientEntity client = find("utilisateurEntity.id = ?1", id).firstResult();
+        if (client != null) {
+            delete(client);
+        }
+    }
+
+
 }

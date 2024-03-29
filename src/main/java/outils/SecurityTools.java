@@ -80,4 +80,13 @@ public class SecurityTools {
                 .sign();
     }
 
+    public static String getTokenOtp(UtilisateurEntity utilisateur, String otp) {
+        return Jwt.issuer("http://sackebandt.fr")
+                .expiresIn(Duration.ofMinutes(20))
+                .upn(utilisateur.getMail_utilisateur())
+                .groups(utilisateur.getRoleEntity().getLibelleRole())
+                .claim("otp", otp )
+                .sign();
+    }
+
 }

@@ -3,23 +3,23 @@ package entities;
 import dto.ClientDto;
 import dto.VilleDto;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @Entity
-@Table(name ="Client", schema = "dbo")
+@Table(name = "Client", schema = "dbo")
 public class ClientEntity {
 
     @Id
     @Column(name = "id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
     @Column(name = "denominationSociale")
     private String denominationSociale;
     @Column(name = "numeroRue")
@@ -39,7 +39,7 @@ public class ClientEntity {
     @JoinColumn(name = "id_ville")
     private VilleEntity villeEntity;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "id_user")
     private UtilisateurEntity utilisateurEntity;
 

@@ -15,6 +15,7 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import outils.Otp;
 import outils.SecurityTools;
 import outils.Validator;
 import repo.RoleRepo;
@@ -88,6 +89,7 @@ public class User {
 
     @Transactional
     @GET
+    @Operation( hidden = true)
     @APIResponse(responseCode = "200", description = "Compte user créé !")
     @APIResponse(responseCode = "400", description = "Lien expiré ou invalide !")
     @APIResponse(responseCode = "401", description = "Lien déjà utilisé !")
@@ -132,7 +134,10 @@ public class User {
             return responseAfterCheck;
 
         if (BcryptUtil.matches(password, utilisateur.getPassword())) {
-            String token = SecurityTools.getToken(utilisateur);
+            String otp = Otp.generateOtp();
+            String token = SecurityTools.getTokenOtp(utilisateur, otp);
+            MailDto mailDto = new MailDto(utilisateur.getMail_utilisateur(), "Double authentification",LocalDateTime.now(),"Code : " + otp);
+            mailClient.sendEmail(mailDto, "t56J6FiHFI8+dA==");
             connexion.deleteConnexionsByUser(login);
             return Response.ok().header("Authorization", "Bearer " + token).build();
         } else {

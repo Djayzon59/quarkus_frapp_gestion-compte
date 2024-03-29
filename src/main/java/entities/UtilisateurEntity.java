@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import services.Role;
 
 import java.util.List;
 
@@ -33,8 +35,11 @@ public class UtilisateurEntity {
     @OneToMany(mappedBy = "userEntity")
     private List<ConnexionEntity> connexionEntities;
 
-    @OneToMany(mappedBy = "utilisateurEntity")
-    private List<ClientEntity> clientEntities;
+    @OneToOne(mappedBy = "utilisateurEntity",  optional = true)
+    private ClientEntity clientEntity;
 
+
+    public UtilisateurEntity(String mail_utilisateur, RoleEntity role){
+    }
 
 }

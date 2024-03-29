@@ -18,6 +18,8 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import outils.HateOAS;
+import outils.Link;
 import outils.SecurityTools;
 import outils.Validator;
 import repo.*;
@@ -58,6 +60,8 @@ public class Client {
     private ClientRepo clientRepo;
     @Inject
     JsonWebToken jsonWebToken;
+    @Inject
+    HateOas hateOas;
 
 
     @Transactional
@@ -93,14 +97,18 @@ public class Client {
         String bodyResponse = String.format("Veuillez cliquer sur le lien suivant pour confirmer la création de votre compte : %s", uriBuilder.build());
         MailDto mail = new MailDto(login, "Confirmation de compte", LocalDateTime.now(), bodyResponse);
         Response response = mailClient.sendEmail(mail, "t56J6FiHFI8+dA==");
-        if (response.getStatus() == 200)
-            return Response.ok("Un mail de confirmation vous a été envoyé !").status(200).build();
+        if (response.getStatus() == 200) {
+            UriBuilder uriAuthenticate = uriInfo.getBaseUriBuilder();
+            hateOas.addLink(new Link("Authentification", HttpMethod.POST, uriAuthenticate.path("professionnel/authentification").build()));
+            return Response.ok(hateOas).status(200).build();
+        }
         return Response.serverError().build();
     }
 
 
     @Transactional
     @GET
+    @Operation(hidden = true)
     @APIResponse(responseCode = "200", description = "Compte professionnel créé !")
     @APIResponse(responseCode = "400", description = "Lien expiré ou invalide !")
     @APIResponse(responseCode = "401", description = "Lien déjà utilisé !")
@@ -147,7 +155,9 @@ public class Client {
         if (BcryptUtil.matches(password, utilisateur.getPassword())) {
             if (utilisateur.getIsValidate() == false) {
                 String token = SecurityTools.getfirstToken(utilisateur);
-                return Response.ok().header("Authorization", "Bearer " + token).build();
+                UriBuilder uriValidation = uriInfo.getBaseUriBuilder();
+                hateOas.addLink(new Link("Validation", HttpMethod.POST, uriValidation.path("professionnel/validation").build()));
+                return Response.ok(hateOas).header("Authorization", "Bearer " + token).build();
             }
             String token = SecurityTools.getToken(utilisateur);
             connexion.deleteConnexionsByUser(login);
@@ -168,9 +178,8 @@ public class Client {
     public Response validate(@HeaderParam("login") String login, @HeaderParam("password") String password,
                              ClientDto clientDto) {
 
-        if (!jsonWebToken.containsClaim("isValidate")) {
+        if (!jsonWebToken.containsClaim("isValidate"))
             return Response.status(Response.Status.UNAUTHORIZED).build();
-        }
         UtilisateurEntity utilisateur = utilisateurRepo.findClientByMail(login);
         if (utilisateur == null)
             return Response.status(Response.Status.UNAUTHORIZED).build();
@@ -199,14 +208,16 @@ public class Client {
     @Transactional
     @DELETE
     @Path("/{login}/")
-    @Operation(summary = "Delete connexions by user")
+    @Operation(summary = "Delete client by mail")
     @APIResponse(responseCode = "200", description = "OK !")
     @APIResponse(responseCode = "403", description = "Accès interdit !")
     @APIResponse(responseCode = "500", description = "Echec supression !")
-    public Response deleteById(@PathParam("login") String login) {
-        if(jsonWebToken.getGroups().contains("client") && !jsonWebToken.getClaim("upn").equals(login))
+    public Response deleteByMail(@PathParam("login") String login) {
+        if (jsonWebToken.getGroups().contains("client") && !jsonWebToken.getClaim("upn").equals(login))
             return Response.status(Response.Status.FORBIDDEN).build();
         try {
+            UtilisateurEntity utilisateur = utilisateurRepo.findClientByMail(login);
+            clientRepo.deleteClientByUserId(utilisateur.getId());
             utilisateurRepo.deleteClientByMail(login);
             return Response.ok().build();
         } catch (Exception e) {

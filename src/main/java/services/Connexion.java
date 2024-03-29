@@ -62,18 +62,19 @@ public class Connexion {
     @Transactional
     @POST
     @Path("/{login}/")
-    @Operation(hidden = true, summary = "Add connexion")
+    @Operation( hidden = true, summary = "Add connexion")
     @APIResponse(responseCode = "200", description = "OK !")
     @APIResponse(responseCode = "404", description = "L'utilisateur n'existe pas !")
     @APIResponse(responseCode = "500", description = "Echec persistence !")
     public Response addConnexion(@PathParam("login") String login) {
 
         try {
-            UtilisateurEntity userEntity = userRepo.findClientByMail(login);
+            UtilisateurEntity userEntity = userRepo.findByMail(login);
             if (userEntity == null)
                 return Response.status(417).entity("L'utilisateur n'existe pas !").build();
 
             ConnexionEntity connexionEntity = new ConnexionEntity();
+            System.out.println(userEntity.getId());
             connexionEntity.setUserEntity(userEntity);
             connexionEntity.setDateFail(LocalDateTime.now());
             connexionRepo.persist(connexionEntity);

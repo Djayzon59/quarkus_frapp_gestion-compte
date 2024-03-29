@@ -1,9 +1,11 @@
 package repo;
 
+import entities.ClientEntity;
 import entities.RoleEntity;
 import entities.UtilisateurEntity;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.RequestScoped;
+import services.Client;
 
 @RequestScoped
 public class UtilisateurRepo implements PanacheRepositoryBase<UtilisateurEntity, String> {
@@ -40,5 +42,10 @@ public class UtilisateurRepo implements PanacheRepositoryBase<UtilisateurEntity,
         delete("mail_utilisateur = ?1 AND roleEntity = ?2", mail, roleEntity);
     }
 
+
+    public UtilisateurEntity findByMail(String mail) {
+        UtilisateurEntity utilisateurEntity = find("mail_utilisateur = ?1 ",mail).firstResult();
+        return utilisateurEntity;
+    }
 }
 
