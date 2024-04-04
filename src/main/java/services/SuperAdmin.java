@@ -106,7 +106,6 @@ public class SuperAdmin {
             return Response.ok("Le lien a déjà été utilisé !").status(401, "Le lien a déjà été utilisé !").build();
         user.setPassword(params[1]);
         user.setRoleEntity(roleRepo.findById(2005));
-        user.setIsValidate(true);
         utilisateurRepo.persist(user);
 
         return Response.ok("Compte super-admin créé").status(200).build();

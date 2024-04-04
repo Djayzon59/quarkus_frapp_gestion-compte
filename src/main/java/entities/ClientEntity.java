@@ -1,11 +1,9 @@
 package entities;
 
-import dto.ClientDto;
-import dto.VilleDto;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
+
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -42,5 +40,8 @@ public class ClientEntity {
     @OneToOne
     @JoinColumn(name = "id_user")
     private UtilisateurEntity utilisateurEntity;
+
+    @OneToMany(mappedBy = "clientEntity")
+    private List<EmployeEntity> employeEntities;
 
 }

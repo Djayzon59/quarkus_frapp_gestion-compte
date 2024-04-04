@@ -8,11 +8,12 @@ import jakarta.enterprise.context.RequestScoped;
 import services.Client;
 
 @RequestScoped
-public class UtilisateurRepo implements PanacheRepositoryBase<UtilisateurEntity, String> {
+public class UtilisateurRepo implements PanacheRepositoryBase<UtilisateurEntity, Integer> {
 
     public UtilisateurEntity findClientByMail(String mail) {
         RoleEntity roleEntity = new RoleEntity(2004,"client");
-        UtilisateurEntity utilisateurEntity = find("mail_utilisateur = ?1 AND roleEntity = ?2", mail, roleEntity).firstResult();
+        RoleEntity roleEntity2 = new RoleEntity(4005,"intermediaire");
+        UtilisateurEntity utilisateurEntity = find("mail_utilisateur = ?1 AND (roleEntity = ?2 OR roleEntity = ?3)", mail, roleEntity, roleEntity2).firstResult();
         return utilisateurEntity;
     }
     public void deleteClientByMail(String mail) {
@@ -47,5 +48,25 @@ public class UtilisateurRepo implements PanacheRepositoryBase<UtilisateurEntity,
         UtilisateurEntity utilisateurEntity = find("mail_utilisateur = ?1 ",mail).firstResult();
         return utilisateurEntity;
     }
+
+    public int findIdUserByMail(String mail){
+        int id = find("mail_utilisateur = ?1", mail)
+                .stream()
+                .map(UtilisateurEntity::getId)
+                .findFirst()
+                .orElse(null);
+        return id;
+    }
+
+    public UtilisateurEntity findEmployeByMail(String mail) {
+        RoleEntity roleEntity1 = new RoleEntity(2006,"employe");
+        RoleEntity roleEntity2 = new RoleEntity(4005,"intermediaire");
+        UtilisateurEntity utilisateurEntity = find("mail_utilisateur = ?1 AND (roleEntity = ?2 OR roleEntity = ?3)", mail, roleEntity1, roleEntity2).firstResult();
+        return utilisateurEntity;
+    }
+
+
+
+
 }
 

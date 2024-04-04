@@ -25,8 +25,8 @@ public class UtilisateurEntity {
     private String mail_utilisateur;
     @Column(name = "password", nullable = false)
     private String password;
-    @Column(name = "isValidate")
-    private Boolean isValidate;
+    @Column(name = "id_client")
+    private Integer idClient;
 
     @ManyToOne
     @JoinColumn(name = "id_role")
@@ -35,8 +35,8 @@ public class UtilisateurEntity {
     @OneToMany(mappedBy = "userEntity")
     private List<ConnexionEntity> connexionEntities;
 
-    @OneToOne(mappedBy = "utilisateurEntity",  optional = true)
-    private ClientEntity clientEntity;
+    @OneToOne(mappedBy = "utilisateurEntity", optional = true)
+    private EmployeEntity employeEntity;
 
 
     public UtilisateurEntity(String mail_utilisateur, RoleEntity role){

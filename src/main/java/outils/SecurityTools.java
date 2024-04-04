@@ -2,6 +2,7 @@ package outils;
 
 import entities.UtilisateurEntity;
 import io.smallrye.jwt.build.Jwt;
+import org.jose4j.jwt.JwtClaims;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -67,18 +68,11 @@ public class SecurityTools {
                 .expiresIn(Duration.ofMinutes(20))
                 .upn(utilisateur.getMail_utilisateur())
                 .groups(utilisateur.getRoleEntity().getLibelleRole())
+                .claim("id", String.valueOf(utilisateur.getId()))
                 .sign();
     }
 
-    public static String getfirstToken(UtilisateurEntity utilisateur) {
-        Boolean isValidate = false;
-        return Jwt.issuer("http://sackebandt.fr")
-                .expiresIn(Duration.ofMinutes(20))
-                .upn(utilisateur.getMail_utilisateur())
-                .groups(utilisateur.getRoleEntity().getLibelleRole())
-                .claim("isValidate", isValidate)
-                .sign();
-    }
+
 
     public static String getTokenOtp(UtilisateurEntity utilisateur, String otp) {
         return Jwt.issuer("http://sackebandt.fr")

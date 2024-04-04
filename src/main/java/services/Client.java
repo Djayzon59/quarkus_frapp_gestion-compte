@@ -40,8 +40,6 @@ public class Client {
 
     @Context
     UriInfo uriInfo;
-    @Context
-    HttpServletRequest httpServletRequest;
     @RestClient
     MailClient mailClient;
     @Inject
@@ -123,15 +121,12 @@ public class Client {
         } catch (ParseException e) {
             return Response.ok("Le lien n'est pas valide !").status(400, "Le lien n'est pas valide !").build();
         }
-
         UtilisateurEntity user = new UtilisateurEntity();
         user.setMail_utilisateur(params[0]);
-        RoleEntity roleEntity = roleRepo.findById(2004);
         if (utilisateurRepo.findClientByMail(user.getMail_utilisateur()) != null)
             return Response.ok("Le lien a déjà été utilisé !").status(401, "Le lien a déjà été utilisé !").build();
         user.setPassword(params[1]);
-        user.setRoleEntity(roleRepo.findById(2004));
-        user.setIsValidate(false);
+        user.setRoleEntity(roleRepo.findById(4005));
         utilisateurRepo.persist(user);
         return Response.ok("Compte utilisateur créé").status(200).build();
     }
@@ -153,9 +148,10 @@ public class Client {
             return responseAfterCheck;
 
         if (BcryptUtil.matches(password, utilisateur.getPassword())) {
-            if (utilisateur.getIsValidate() == false) {
-                String token = SecurityTools.getfirstToken(utilisateur);
+            if (utilisateur.getRoleEntity().getLibelleRole().equals("intermediaire")) {
+                String token = SecurityTools.getToken(utilisateur);
                 UriBuilder uriValidation = uriInfo.getBaseUriBuilder();
+                hateOas.setMessage("Merci de compléter vos informations personnelles afin de valider votre comtpe");
                 hateOas.addLink(new Link("Validation", HttpMethod.POST, uriValidation.path("professionnel/validation").build()));
                 return Response.ok(hateOas).header("Authorization", "Bearer " + token).build();
             }
@@ -168,7 +164,7 @@ public class Client {
         }
     }
 
-    @RolesAllowed("client")
+    @RolesAllowed("intermediaire")
     @Transactional
     @POST
     @Path("/validation")
@@ -178,10 +174,11 @@ public class Client {
     public Response validate(@HeaderParam("login") String login, @HeaderParam("password") String password,
                              ClientDto clientDto) {
 
-        if (!jsonWebToken.containsClaim("isValidate"))
-            return Response.status(Response.Status.UNAUTHORIZED).build();
         UtilisateurEntity utilisateur = utilisateurRepo.findClientByMail(login);
+
         if (utilisateur == null)
+            return Response.status(Response.Status.UNAUTHORIZED).build();
+        if(!utilisateur.getRoleEntity().getLibelleRole().equals("intermediaire"))
             return Response.status(Response.Status.UNAUTHORIZED).build();
         if (!BcryptUtil.matches(password, utilisateur.getPassword()))
             return Response.status(Response.Status.UNAUTHORIZED).build();
@@ -196,9 +193,9 @@ public class Client {
         clientEntity.setSiren(clientDto.getSiren());
         clientEntity.setVilleEntity(new VilleEntity(clientDto.getLibelleVille(), new PaysEntity(clientDto.getLibellePays())));
         clientEntity.setUtilisateurEntity(utilisateur);
+        utilisateur.setRoleEntity(roleRepo.findById(2004));
         paysRepo.persist(clientEntity.getVilleEntity().getPaysEntity());
         villeRepo.persist(clientEntity.getVilleEntity());
-        utilisateur.setIsValidate(true);
         clientRepo.persist(clientEntity);
         String token = SecurityTools.getToken(utilisateur);
         return Response.ok().header("Authorization", "Bearer " + token).build();
